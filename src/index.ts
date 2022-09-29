@@ -14,7 +14,7 @@ import { FlatfileRecord, FlatfileRecords } from '@flatfile/hooks'
 import fetch from 'node-fetch'
 
 const Employees = new Sheet(
-  'Employees',
+  'CF Test Sheet',
   {
     firstName: TextField({
       required: true,
@@ -79,16 +79,10 @@ const Employees = new Sheet(
   }
 )
 
-const EmployeesPortal = new Portal({
-  name: 'EmployeesPortal',
-  sheet: 'Employees'
-})
-
 export default new Workbook({
-  name: 'Employees',
-  namespace: 'employee',
+  name: 'CF Workbook Name',
+  namespace: 'CF Namespace',
   sheets: {
     Employees,
   },
-  portals: [EmployeesPortal],
 })
