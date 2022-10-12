@@ -14,7 +14,7 @@ import { FlatfileRecord, FlatfileRecords } from '@flatfile/hooks'
 import fetch from 'node-fetch'
 
 const Employees = new Sheet(
-  'CF Test Sheet',
+  'CF Test Sheet - 1',
   {
     firstName: TextField({
       required: true,
@@ -59,10 +59,16 @@ const Employees = new Sheet(
   {
     allowCustomFields: true,
     readOnly: true,
-    recordCompute: (record) => {
+    recordCompute: (record) => {      
+      if (record.get('firstName') && !record.get('lastName')) {
+        record.addError(
+          'lastName',
+          'Last Name is required if First Name is present'
+        )
+      }
       const fullName = `{record.get('firstName')} {record.get('lastName')}`
       record.set('fullhName', fullName)
-      return record
+      return record      
     },
     batchRecordsCompute: async (payload: FlatfileRecords<any>) => {
       const response = await fetch('https://api.us.flatfile.io/health', {
