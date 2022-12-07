@@ -1,32 +1,14 @@
+# Platform SDK Starter
 
-# Platform SDK Quickstart
-Use this quickstart guide to get up and running with Flatfile. You'll learn how to get your access keys, configure your environment, and deploy an example project for importing employee data.
+The platform SDK starter is a way to configure your Flatfile Workbook in code.
 
-### NOTE: Upgrading from Beta?
+Visit [the Guides](https://flatfile.com/docs/guides/) to learn more about using Flatfile and the Platform SDK Starter.
 
-Be sure to run ```npm update```
+## Getting Started
 
-*If running into update issues, then remove ```package-lock.json``` and ```node_modules``` to reinstall*
+Visit [CLI quickstart](https://flatfile.com/docs/get-started/quickstart/) and follow instructions to sign up for a Flatfile account and run this code locally.
 
-### 1. Establish Access
-
-After you create your account in Flatfile, we create a **Team ID**, an **Access Key ID**, and a **Secret Access Key** for you. You will need this information to configure your environment.
-
-1. [Sign up](https://api.flatfile.io/auth/github) or [Sign in](app.flatfile.com) to Flatfile.
-2. [Locate](https://support.flatfile.com/hc/en-us/articles/8410988807828) your Flatfile **Team ID** and write it down.
-3. [Generate](https://docs.flatfile.com/docs/api-reference/#managing-access-keys)  an **Access Key ID** and **Secret Access Key**.
-
-
-### 2. Configure your environment
-
-1. Create a `.env` file in the project root using the `.env.example` file as a template.
-2. Add the **Access Key ID** to your `.env` file as the `FLATFILE_ACCESS_KEY_ID` variable
-4. Add the **Secret Access Key** to your `.env` file as the `FLATFILE_SECRET` variable
-6. Add the **Team ID** to your `.env` file as the `FLATFILE_TEAM_ID` variable
-7. Add the **Environment** you want to deploy to in your `.env` file as the `FLATFILE_ENV` variable. It defaults to 'test'. (You can add 'prod' when you're ready to deploy to production.)
-
-
-### 3. Introduction to Workbooks
+### 1. Introduction to Workbooks
 
 <!-- TODO what are workbooks? -->
 
@@ -39,8 +21,9 @@ const Employees = new Sheet(
   'Employees',
   {
     firstName: TextField({
+      label: 'First Name',
       required: true,
-      description: 'Given name',
+      description: 'Given Name'
     }),
     lastName: TextField(),
     fullName: TextField(),
@@ -53,6 +36,7 @@ const Employees = new Sheet(
         hr: 'People Ops',
         sales: 'Revenue',
       },
+      matchStrategy: 'exact',
     }),
     fromHttp: TextField({ label: 'Set by batchRecordCompute' }),
     salary: NumberField({
@@ -95,16 +79,48 @@ const Employees = new Sheet(
     },
   }
 )
+
+const BaseSheet = new Sheet(
+  'BaseSheet',
+  {
+    firstName: TextField(),
+    middleName: TextField('Middle'),
+    lastName: TextField(),
+    email: TextField({
+      unique: true,
+      primary: true
+    })
+  },
+  {
+    previewFieldKey: 'email',
+  }
+)
+
+const LinkedSheet = new Sheet(
+  'LinkedSheet',
+  {
+    email: LinkedField({
+      unique: true,
+      label: 'Email',
+      primary: true,
+      sheet: BaseSheet,
+      upsert: false,
+    }),
+    firstName: TextField(),
+    middleName: TextField('Middle'),
+    lastName: TextField(),
+  },
+)
+
 ...
 ```
 
-[View full source code](src/examples/FullExample.ts)
+[View full source code](examples/workbooks/FullExample.ts)
 
 The above code will generate a **Workbook** that looks like this:
 ![Sample Data upload](/assets/SampleImportErrors.png)
 
-
-### 4. Deploy the Schema
+### 2. Deploy the Schema
 
 Follow these steps to deploy a **Workbook** and view it in your **Dashboard**. Because your secret keys are being used, Flatfile will know to create your first **Workspace** in the correct place.
 
@@ -121,6 +137,7 @@ Now, let's take a closer look at the example **Workbook** we just deployed, star
 3. `DateField`: a date
 4. `OptionField`: a field with a set of pre-defined values
 5. `BooleanField`: a true / false field
+6. `LinkedField`: a field that links two sheets together
 
 ### Field options
 
@@ -158,6 +175,7 @@ salary: NumberField({
   },
 }),
 ```
+
 Here we've indicated that the `salary` field is required, and we've given it a human-readable description.
 
 We also provide a `validate` function that defines what we consider to be a valid value for this field. In this case, we've decided that `salary` must be greater than or equal to $30,000. We also provide a human-readable message to be displayed when the validation criterion is not met.
@@ -174,15 +192,57 @@ department: OptionField({
     hr: 'People Ops',
     sales: 'Revenue',
   },
+  matchStrategy: 'exact',
 }),
 ```
 
-Here we provide a pre-defined list of values that this field can have.
-<!-- TODO what does `label` do? -->
+Here we provide a pre-defined list of values that this field can have. We have also included the `matchStrategy` flag, which determines whether Flatfile should only accept exact matches when automatically matching your OptionField options, or whether Flatfile should also use [historical matches and fuzzy matches](https://support.flatfile.com/hc/en-us/articles/8579991586324-Matching) while automatically matching your options. If this is not set, your OptionField will use historical and fuzzy matches to automatically match options for this field.
 
+If a `default` value is provided for an `OptionField` we check that is a value provided in `options`.
+
+If you want to have an option value of the empty string `''`, you must set that as a default like this.
+```
+    emptyExample : OptionField({
+      options:{eng:"Eng_Display_Label4", hr:"HR", "":"empty"},
+      default: ''
+    })
+```
+
+<!-- TODO what does `label` do? -->
 
 <!-- TODO Boolean Field? -->
 
+#### LinkedField
+
+```js
+email: LinkedField({
+    label: 'First Name',
+    sheet: BaseSheet,
+    upsert: false
+}),
+```
+
+Here we define which field is linked to another template, along with the sheet this field should be linked to. We have also set `upsert: false` which disables the default upsert behavior and will display an error on this sheet if a value imported in the LinkedField does not exist on the parent sheet. For more information about our Relational Data feature, visit our [Relational Data Guide](https://support.flatfile.com/hc/en-us/articles/8606584859284-Relational-Data).
+
+```js
+const BaseSheet = new Sheet(
+  'BaseSheet',
+  {
+    firstName: TextField({
+      unique: true,
+      primary: true,
+    }),
+    middleName: TextField('Middle'),
+    lastName: TextField(),
+    email: TextField(),
+  },
+  {
+    previewFieldKey: 'email',
+  }
+)
+```
+
+Here we define the sheet we are linking to, and on the sheet set the `previewFieldKey` option that will display on the original template. Note: `LinkedField` can currently only be implemented in Workspaces, which is why this example doesn't have a portal deployed for the LinkedSheet and BaseSheet sheets.
 
 ### Sheet options
 
@@ -258,7 +318,7 @@ batchRecordsCompute: async (payload: FlatfileRecords<any>) => {
 
 `batchRecordsCompute` is a **Data Hook** which runs after all `recordCompute` calls have finished and receives the full list of processed rows, at which point you can perform bulk operations on them. This is a good place to put slower operations that benefit from batching, such as external HTTP requests. In this example, we fetch a single value from an API and write it to each record.
 
-### 5. Get into the details
+### 3. Get into the details
 
 #### Knowing which hooks to use
 
@@ -269,6 +329,7 @@ batchRecordsCompute: async (payload: FlatfileRecords<any>) => {
 #### Parsing, casting, and field conversion.
 
 <!-- TODO: explain what a cast function is and how it is used for parsing input -->
+
 We have written sensible default implementations of cast functions for TextField, NumberField, and DateField. We wrote extensive tests to document and verify their behavior. Refer to [the CastFunction tests](https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/stdlib/CastFunctions.spec.ts) to see more.
 
 When our default `cast` function can't parse an incoming value in a reliable way, the cast function throws an error. The error message shows up in the UI and the original value is stored in the table so users can edit that value into a proper type.
@@ -282,9 +343,10 @@ compute:(v:string) => {return v.toLocaleLowerCase()}
 ```
 
 is a good function, since `compute("ASDF") === compute('asdf') === 'asdf'`.
+
 <!-- TODO provide an example of a bad function -->
 
-### 6. Test your stuff
+### 4. Test your stuff
 
 We are big believers in Test Driven Development at Flatfile. Well written tests help you reason about the behavior of complex systems.
 
@@ -294,7 +356,7 @@ Running tests on a **Sheet** or **Workbook** is much faster than deploying to Fl
 
 Stay tuned for future releases where we will add even more capabilities to our testing system.
 
-### 7. Advanced Topics
+### 5. Advanced Topics
 
 #### Concepts
 
@@ -338,13 +400,14 @@ When releasing pieces to the SDK our thought process is guided by the following 
 3. Does this work as we expect it to?
 
 ---
+
 ### FAQ
 
 - **How can I lowercase an email field anytime input is provided by a file or manual entry?**
   - This is a good use for field `compute`. This function will be idempotent (running it over and over on the same input produces the same output and state)
 - **How can check the type and size of an url and return an error if the linked file is > 5mb or not an image?**
   - Currently this is best accomplished with a text field named `s3_url` that will match to the URL provided in the upload, and a row `compute` that stores the size of the download to `s3_url_size`, `s3_url_size` should have an `validate` of less than 5mb.
-  - In the near future this will be handled with a computed filed that takes `s3_url` as an input and outputs `s3_url_size`.
+  - In the near future this will be handled with a computed field that takes `s3_url` as an input and outputs `s3_url_size`.
   - In the longer term this will be handled by a `SmartURLCapture` field that stores URLs to a synced s3 bucket and provides metadata about the download including size. The `validate` will run on the size property of the `SmartURLCapture` field
 - **Using a domain name (www.flatfile.com) field, how can I call the clearbit API and populate another field with an image url to their logo?**
   - Currently this is best accomplished via a row `compute`.
@@ -368,39 +431,64 @@ When releasing pieces to the SDK our thought process is guided by the following 
   - Eventually this will be possible by writing tools that translate from ORM or database DDL to schemaIL. We are currently solidifying the core functionality of the platform and this will remain out of scope for the foreseeable future.
 
 ## Glossary
-### Sheet
-A `Sheet` object describes the desired characteristics or "shape" of data that you expect for an individual CSV file or sheet in an excel file. A Sheet can be thought of as roughly analogous to a database table.  
-### Field
-A `Field` object represents a column of data in a `Sheet`.  They are similar to columns in a database.  Fields can be configured to clean, transform and validate incoming data through options and hooks.
-### Data Hook®
-Data Hooks® are the Flatfile copyrighted term for code that runs on `Field`s and `Sheet`s to transform and validate data.
-### Field Hook
-Field hooks are Data Hook®s that run on individual fields.  There are three field-level hooks:
-### Workbook
-A Workbook is a collection of Sheets.  The Sheets of a Workbook can be optionally linked together via `ForeignKey`.  A Workbook is similar to a database schema.
 
+### Sheet
+
+A `Sheet` object describes the desired characteristics or "shape" of data that you expect for an individual CSV file or sheet in an excel file. A Sheet can be thought of as roughly analogous to a database table.
+
+### Field
+
+A `Field` object represents a column of data in a `Sheet`. They are similar to columns in a database. Fields can be configured to clean, transform and validate incoming data through options and hooks.
+
+### Data Hook®
+
+Data Hooks® are the Flatfile copyrighted term for code that runs on `Field`s and `Sheet`s to transform and validate data.
+
+### Field Hook
+
+Field hooks are Data Hook®s that run on individual fields.
+
+### Workbook
+
+A Workbook is a collection of Sheets. The Sheets of a Workbook can be optionally linked together via `ForeignKey`. A Workbook is similar to a database schema.
 
 ## Object Reference
+
 Technically taken from SchemaIL interfaces
+
 ### BaseFields
-The base fields closely mirror primitive types and vary primarily by their default cast functions.  Read [the CastFunction tests](https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/stdlib/CastFunctions.spec.ts) for explicit understanding of cast function behavior.
+
+The base fields closely mirror primitive types and vary primarily by their default cast functions. Read [the CastFunction tests](https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/stdlib/CastFunctions.spec.ts) for explicit understanding of cast function behavior.
+
 #### TextField
-Persists strings.  Defaults to `StringCast` `cast`.
+
+Persists strings. Defaults to `StringCast` `cast`.
+
 #### NumberField
-Persists numbers.  Defaults to `NumberCast` `cast`
+
+Persists numbers. Defaults to `NumberCast` `cast`
+
 #### BooleanField
-Persists booleans.  Defaults to `BooleanCast` `cast`
+
+Persists booleans. Defaults to `BooleanCast` `cast`
+
 #### DateField.
-Persists Dates.  Defaults to `DateCast` `cast`
+
+Persists Dates. Defaults to `DateCast` `cast`
 
 ### Special Fields
+
 #### OptionField
+
 Presents the user with discrete options. Accepts a specific option of
+
 ```ts
 options:{'dbValue': 'Label displayed to user'}
 options:{'dbValue': {label: 'Label displayed to user',  futureOption1: undefined}
 ```
+
 It is called like this
+
 ```
     department: OptionField({
       label: 'Department',
@@ -411,7 +499,9 @@ It is called like this
       },
     }),
 ```
+
 or
+
 ```ts
     department: OptionField({
       label: 'Department',
@@ -425,6 +515,7 @@ or
 ```
 
 ### FieldOptions
+
 ```ts
 interface FieldOptions {
   label: string
@@ -437,29 +528,86 @@ interface FieldOptions {
   validate: (value: T) => void | Message[]
 }
 ```
+
 (Field Options Definitions)[https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/ddl/Field.ts#L43-L69]
 Every field can set at least the above properties
-#### Label
-Controls the label displayed for the field in the UI
-#### Required
-Is a value for this field required after the `default` stage of field hooks.  If set to true, an error will be thrown and registered as such on the cell for that value, no further processing will take place for that field.
-#### Primary
-Is this field the primary key for a sheet, or part of a composite primary key (not currently supported).  Primary implies unique too.
-#### Unique
-Is this field required to be unique across the whole sheet.  We have chosen to treat a field with multiple `null`s as still unique.  [Tests and comments](https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/ddl/Sheet.ts#L41-L46)
 
+#### Label
+
+Controls the label displayed for the field in the UI
+
+#### Required
+
+Is a value for this field required after the `default` stage of field hooks. If set to true, an error will be thrown and registered as such on the cell for that value, no further processing will take place for that field.
+
+#### Primary
+
+Is this field the primary key for a sheet, or part of a composite primary key (not currently supported). Primary implies unique too.
+
+#### Unique
+
+Is this field required to be unique across the whole sheet. We have chosen to treat a field with multiple `null`s as still unique. [Tests and comments](https://github.com/FlatFilers/platform-sdk-mono/blob/main/packages/configure/src/ddl/Sheet.ts#L41-L46)
 
 #### `cast`
-`cast` transforms input into the type specified by the field.
-#### `default`
-The default value for this field
-#### `compute`
-`compute` takes the type specified by the field and returns the type specified by the field.
-#### `validate`
-`validate` takes the type specified by the field and returns validation messages.  This is the most commonly used field hook.
 
+`cast` transforms input into the type specified by the field.
+
+#### `default`
+
+The default value for this field
+
+#### `compute`
+
+`compute` takes the type specified by the field and returns the type specified by the field.
+
+#### `validate`
+
+`validate` takes the type specified by the field and returns validation messages. This is the most commonly used field hook.
+
+#### Other Field Options
+
+##### Description
+
+Long form description that appears in the UI upon hover of the field name.
+
+##### Annotations
+
+Annotations are automatically filled in messages that the platform sdk provides when `default` or `compute` changes a value. Following independent options set as an object - `{}`
+
+###### default
+
+If set to `true` insertions of the `default` value will be annotated with an info message of `defaultMessage`
+
+###### defaultMessage
+
+The message to use when a `default` value is inserted. If none specified, defaults to 'This field was automatically given a default value of'
+
+###### compute
+
+If set to `true` instances where `compute` changes the value of a field will be annotated with an info message of `computeMessage`
+
+###### computeMessage
+
+The message to use when a `compute` changes a value. if none specified, defaults to 'This value was automatically reformatted - original data:'
+
+##### stageVisibility
+
+controls what parts of mapping/review/export a field occurs in
+
+###### mapping
+
+When set to `false` this field will not appear for matching in the mapping stage.
+
+###### review
+
+This field will not appear in the review stage
+
+###### export
+
+This field will not be exported.
 
 ### SheetOptions
+
 ```ts
 export interface SheetOptions<FC> {
   allowCustomFields: boolean
@@ -471,8 +619,80 @@ export interface SheetOptions<FC> {
 ```
 
 #### allowCustomFields
+
 Allows the end user to create additional fields from their upload when the incoming column does not match with any existing field for the Sheet.
+
 #### recordCompute
+
 Function that receives a row with all required fields fully present and optional fields typed `optional?:string`. Best used to compute derived values, can also be used to update existing fields.
+
 #### batchRecordsCompute
+
 Asynchronous function that is best for HTTP/API calls. External calls can be made to fill in values from external services. This takes `records` so it is easier to make bulk calls.
+
+## SheetTester®
+
+This helper utility gives you tools to test real records and fields locally against your field hooks (`default`, `cast`, `compute` and `validate`) and record-level compute functions (`recordCompute` and `batchRecordsCompute`). This runs the exact same logic that is done on Flatfile's production servers so it will produce the same results locally for quick testing before deploying.
+
+For example, with this TestSheet:
+
+```js
+const TestSheet = new Sheet(
+  'TestSheet',
+  {
+    firstName: TextField({
+      required: true,
+      description: 'foo',
+      compute: (v) => v.toUpperCase(),
+    }),
+    age: NumberField(),
+    testBoolean: BooleanField({ default: false }),
+  },
+  {
+    recordCompute: (record, _session, _logger) => {
+      const age = record.get('age')
+      const newAge = typeof age === 'number' ? age * 2 : 0
+      record.set('age', newAge)
+    },
+  }
+)
+```
+
+### transformField(fieldName: string, value: string)
+
+This takes a field name and value and returns the transformed value based on all sheet operations:
+
+```js
+expect(await testSheet.transformField('age', '10')).toEqual(20)
+```
+
+### testRecord(record: object)
+
+This takes a full record and returns the transformed record based on all sheet operations:
+
+```js
+const inputRow = { firstName: 'foo', age: '10', testBoolean: 'true' }
+
+const expectedOutputRow = { age: 20, firstName: 'FOO', testBoolean: true }
+const res = await testSheet.testRecord(inputRow)
+expect(res).toMatchObject(expectedOutputRow)
+```
+
+### testRecords(record: object[])
+
+This takes an array of full records and returns the transformed records based on all sheet operations:
+
+```js
+const inputRows = [
+  { firstName: 'foo', age: '10', testBoolean: 'true' },
+  { firstName: 'bar', age: '8', testBoolean: 'true' },
+]
+
+const expectedOutputRows = [
+  { age: 20, firstName: 'FOO', testBoolean: true },
+  { age: 16, firstName: 'BAR', testBoolean: true },
+]
+
+const results = await testSheet.testRecords(inputRows)
+expect(results).toMatchObject(expectedOutputRows)
+```
