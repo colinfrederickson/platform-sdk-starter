@@ -6,6 +6,7 @@ import { Contacts } from './contacts'
 import { ListCountriesFragment } from './fragments/list_countries'
 import { ListStatesProvincesFragment } from './fragments/list_stateprovince'
 import { SmartDateField } from './SmartDateField'
+import { uid } from './helpers/uid'
 
 
 export const Addresses = new Sheet(
@@ -80,8 +81,11 @@ export const Addresses = new Sheet(
   },
   {
     recordCompute(record, logger) {
-      setAddressId(record)
-      validatePostcode(record)
+      if (record.get('StreetName')) {
+        if (!record.get('ContactAddressID')) {
+          record.set('ContactAddressID', uid(7))
+        }
     }
   }
+}
 )
