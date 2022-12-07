@@ -12,7 +12,7 @@ export const Addresses = new Sheet(
   'Addresses',
   {
     ContactAddressID: TextField({
-      label: 'Person Address ID',
+      label: 'Contact Address ID',
       //required: true,
       unique: true,
       primary: true

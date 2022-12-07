@@ -46,8 +46,8 @@ import { Addresses } from './addresses'
 
 
 export default new Workbook({
-  name: 'Relational Demo',
-  namespace: 'Relational Demo',
+  name: 'Relational Demo 1',
+  namespace: 'Relational Demo 1',
   sheets: {
     // Entities,
     Contacts,
