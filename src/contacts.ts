@@ -17,7 +17,7 @@ export const Contacts = new Sheet(
       unique: true,
       required: true,
       primary: true,
-      cast: computeDefault => uid(7),
+      //cast: computeDefault => uid(7),
     }),
 
     EntityID: TextField({
