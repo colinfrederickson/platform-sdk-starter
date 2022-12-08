@@ -18,12 +18,12 @@ export const Addresses = new Sheet(
       unique: true,
       primary: true
     }),
-    EntityID: LinkedField({
-      label: 'Entity ID',
-      sheet: Contacts,
-      required: false,
-      upsert: false,
-    }),
+    //EntityID: LinkedField({
+      //label: 'Entity ID',
+      //sheet: Contacts,
+      //required: false,
+      //upsert: false,
+    //}),
     ContactID: LinkedField({
       label: 'Contact ID',
       sheet: Contacts,
@@ -35,9 +35,9 @@ export const Addresses = new Sheet(
       // unique: true,
       // required: true,
     }),
-    StreetNumber: TextField({
-      label: 'Street Number',
-    }),
+    //StreetNumber: TextField({
+      //label: 'Street Number',
+    //}),
     StreetName: TextField({
       label: 'Street Name',
     }),
@@ -62,12 +62,12 @@ export const Addresses = new Sheet(
         ...ListCountriesFragment,
       }
     }),
-    CareOf: TextField({
-      label: 'Care Of',
-    }),
-    MoreInfo: TextField({
-      label: 'More Info',
-    }),
+    //CareOf: TextField({
+      //label: 'Care Of',
+    //}),
+    //MoreInfo: TextField({
+      //label: 'More Info',
+    //}),
     StartDate: SmartDateField({
       label: 'Start Date',
       fString: 'yyyy-MM-dd'

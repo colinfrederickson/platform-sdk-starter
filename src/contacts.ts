@@ -8,9 +8,9 @@ import { IndividualFragment } from './fragments/individual'
 export const Contacts = new Sheet(
   'Contacts',
   {
-    isEntity: BooleanField({
-      label: 'Is Entity',
-    }),
+    //isEntity: BooleanField({
+      //label: 'Is Entity',
+    //}),
 
     ContactID: TextField({
       label: 'Contact ID',
@@ -20,10 +20,10 @@ export const Contacts = new Sheet(
       //cast: computeDefault => uid(7),
     }),
 
-    EntityID: TextField({
-      label: 'Entity ID',
-      unique: true,
-    }),
+    //EntityID: TextField({
+      //label: 'Entity ID',
+      //unique: true,
+    //}),
 
     LegalName: TextField({
       label: 'Legal Name',
@@ -35,7 +35,7 @@ export const Contacts = new Sheet(
     /**
      * Entity fields
      */
-    ...EntityFragment,
+    //...EntityFragment,
 
     /**
      * Individual fields
@@ -61,19 +61,19 @@ export const Contacts = new Sheet(
       /**
        * If the user has indicated something is an entity, make sure the ID is set
        */
-      if (record.get('isEntity')) {
-        if (!record.get('EntityID')) {
-          record.set('EntityID', uid(7))
-        }
+      //if (record.get('isEntity')) {
+        //if (!record.get('EntityID')) {
+          //record.set('EntityID', uid(7))
+        //}
 
-        Object.keys(IndividualFragment).forEach((k) => {
-          record.addWarning(k, 'DISABLED')
-        })
-      } else {
-        Object.keys(EntityFragment).forEach((k) => {
-          record.addWarning(k, 'DISABLED')
-        })
-      }
+        //Object.keys(IndividualFragment).forEach((k) => {
+          //record.addWarning(k, 'DISABLED')
+        //})
+      //} else {
+        //Object.keys(EntityFragment).forEach((k) => {
+          //record.addWarning(k, 'DISABLED')
+        //})
+      //}
     },
   }
 )

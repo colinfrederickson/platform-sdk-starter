@@ -16,7 +16,7 @@
 
     record.set(key, formatted)
     if (formatted.length != '10') {
-      record.addError(key, 'Please enter a valid number')
+      record.addError(key, 'Please enter a valid phone number')
     }
     if (formatted !== phone) {
       record.addInfo(key, `Automatically reformatted from "${phone}" to "${formatted}"`)
