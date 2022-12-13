@@ -19,9 +19,27 @@ import {
  * import { YourSheet } from './path-to-your-sheet/your-sheet.ts'
  */
 const MySheet = new Sheet('MySheet', {
-  firstName: TextField(),
-  lastName: TextField(),
-  age: NumberField(),
+  
+  age: NumberField({
+    label: 'Age',
+    required: false,
+    primary: true,
+    unique: true,
+    description: 'Age of Person',
+    annotations: {
+      default: true,
+      defaultMessage: 'This field was automatically given a default value of',
+      compute: true,
+      computeMessage: 'This value was automatically reformatted to two decimal places. Original value was: ',
+    },
+    stageVisibility: {
+      mapping: true,
+      review: true,
+      export: true
+    },
+    default: 13,
+    compute: (v: number) => {return Number(v.toFixed(2))},
+  }),
 })
 
 /**
@@ -30,14 +48,14 @@ const MySheet = new Sheet('MySheet', {
  * import { YourPortal } from './path-to-your-portal/your-portal.ts'
  */
 const MyPortal = new Portal({
-  name: 'MyPortal',
+  name: 'NumberFieldTesting',
   sheet: 'MySheet',
 })
 
 // Workbook  - Update to reference your Workbook with Sheet(s) and Portal(s)
 export default new Workbook({
-  name: 'MyWorkbook',
-  namespace: 'my-workbook',
+  name: 'NumberFieldTesting',
+  namespace: 'NumberFieldTesting',
   portals: [MyPortal],
   sheets: {
     MySheet,
